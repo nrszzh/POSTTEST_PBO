@@ -11,6 +11,28 @@ class ProdukOptik:
         self.__stok = stok
         ProdukOptik.produk_terdaftar += 1
 
+    @property
+    def harga(self):
+        return self.__harga
+
+    @property
+    def stok(self):
+        return self.__stok
+
+    @harga.setter
+    def harga(self, harga_baru):
+        if harga_baru <= 0:
+            print('Harga harus lebih besar dari Rp 0')
+        else:
+            self.__harga = harga_baru
+
+    @stok.setter
+    def stok(self, stok_baru):
+        if stok_baru < 0:
+            print(f'Stok {self.nama_produk} tidak boleh negatif')
+        else: 
+            self.__stok = stok_baru
+
     def tampil_detail(self):
         print(f'| [{self.id_sku:<15}] {self.nama_produk:<35} | Kat: {self.kategori:<5} | Harga: Rp{self.harga:<10,.0f} | Stok: {self.stok:<3} |')
 
@@ -47,6 +69,18 @@ class Inventory:
         self.daftar_barang.append(produk)
         print(f'Berhasil menambahkan {produk.nama_produk} ke inventory {self.nama_cabang}')
 
+    @property
+    def pin_akses(self):
+        return self.__pin_akses
+
+    @pin_akses.setter
+    def pin_akses(self, pin_baru):
+        pin = str(pin_baru)
+        if len(pin) != 3 or not pin.isdigit():
+            print('PIN harus 3 digit angka')
+        else:
+            self.__pin_akses = pin
+            print('PIN berhasil diubah')
 
 
 class Transaksi:
@@ -60,6 +94,28 @@ class Transaksi:
         self.item_pembelian = []
         self.status_pembayaran = 'Pending'
         self.__total_bayar = 0
+
+    @property
+    def total_bayar(self):
+        return self.__total_bayar
+
+    @total_bayar.setter
+    def total_bayar(self, nilai_baru):
+        if nilai_baru < 0:
+            print('Total bayar tidak boleh bernilai negatif!')
+        else:
+            self.__total_bayar = nilai_baru
+
+    def tambah_item_pembelian(self, produk, qty=1):
+        if produk.kurangi_stok(qty):
+            subtotal = produk.harga * qty
+            self.item_pembelian.append({
+                'produk': produk,
+                'qty': qty,
+                'subtotal': subtotal
+            })
+            self.__total_bayar += subtotal
+            print(f'Ditambahkan ke {self.id_transaksi}: {produk.nama_produk} (x{qty})')
 
     def cetak_nota(self):
         print('\n' + '=' * 75)
