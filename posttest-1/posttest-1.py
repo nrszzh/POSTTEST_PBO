@@ -49,6 +49,10 @@ class ProdukOptik:
         sku_generated = f'{kat_code.upper()}-{merk_code.upper()}-{fitur_code.upper()}-{uk_code.upper()}'
         return cls(sku_generated, nama_produk, kat_code.upper(), harga, stok)
 
+    @staticmethod
+    def hitung_omset(nom_harga, qty_stok):
+        return nom_harga * qty_stok
+
 
 class Inventory:
     nama_sistem = 'Optik Inventory System'
