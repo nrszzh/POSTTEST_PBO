@@ -44,6 +44,10 @@ class ProdukOptik:
             print(f'Stok {self.nama_produk} tidak cukup, (Sisa : {self.__stok})')
             return False
 
+    @classmethod
+    def buat_sku(cls, kat_code, merk_code, fitur_code, uk_code, nama_produk, harga, stok):
+        sku_generated = f'{kat_code.upper()}-{merk_code.upper()}-{fitur_code.upper()}-{uk_code.upper()}'
+        return cls(sku_generated, nama_produk, kat_code.upper(), harga, stok)
 
 
 class Inventory:
@@ -81,6 +85,12 @@ class Inventory:
         else:
             self.__pin_akses = pin
             print('PIN berhasil diubah')
+
+    @classmethod
+    def update_kapasitas_gdg(cls, kapasitas_baru):
+        if kapasitas_baru > 0:
+            cls.max_gudang = kapasitas_baru
+            print(f'Kapasitas Gudang Pusat diperbarui menjadi: {cls.max_gudang} unit')
 
 
 class Transaksi:
