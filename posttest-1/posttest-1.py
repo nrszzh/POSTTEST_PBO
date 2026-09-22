@@ -155,3 +155,14 @@ class Transaksi:
         print('=' * 75 + '\n')
         Transaksi.transaksi_selesai += 1
 
+
+if __name__ == '__main__':
+    produk1 = ProdukOptik('FRM-RB-BLK-52', 'Frame Ray-Ban Wayfarer Black', 'FRM', 2200000, 5)
+    produk2 = ProdukOptik.buat_sku('LNS', 'ES', 'BLR', '0200', 'Lensa Essilor BlueRay Minus 2.00', 1200000, 10)
+    produk3 = ProdukOptik('AKS-OPC-LIQ-60', 'Cairan Pembersih OptiClean 60ml', 'AKS', 35000, 20)
+
+    stok_cab1 = Inventory('Optik Cahaya Samarinda Central Plaza')
+    stok_cab2 = Inventory('Optik Cahaya Bontang City Mall')
+
+    transaksi1 = Transaksi('TR-0001', 'Nur Azizah')
+    transaksi2 = Transaksi('TR-0002', 'Islamiyah')
