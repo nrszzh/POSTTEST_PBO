@@ -133,7 +133,7 @@ class Transaksi:
 
     def cetak_nota(self):
         print('\n' + '=' * 75)
-        print(f'               NOTA PEMBELIAN - {Transaksi.nama_optik.upper()}')
+        print(f'                    NOTA PEMBELIAN - {Transaksi.nama_optik.upper()}')
         print('=' * 75)
         print(f'ID Transaksi : {self.id_transaksi}')
         print(f'Pelanggan    : {self.nama_pelanggan}')
