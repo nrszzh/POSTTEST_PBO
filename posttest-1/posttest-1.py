@@ -166,3 +166,37 @@ if __name__ == '__main__':
 
     transaksi1 = Transaksi('TR-0001', 'Nur Azizah')
     transaksi2 = Transaksi('TR-0002', 'Islamiyah')
+
+
+    stok_cab1.tambah_produk(produk1)
+    stok_cab1.tambah_produk(produk2)
+    stok_cab1.tambah_produk(produk3)
+    stok_cab1.tampil_stok()
+
+    omset_p1 = ProdukOptik.hitung_omset(produk1.harga, produk1.stok)
+    print(f'Omset dari {produk1.nama_produk}: Rp{omset_p1:,.0f} \n')
+
+    Inventory.update_kapasitas_gdg(1500)
+
+    print()
+    transaksi1.tambah_item_pembelian(produk1, qty=1)
+    transaksi1.tambah_item_pembelian(produk2, qty=1)
+    transaksi1.tambah_item_pembelian(produk3, qty=2)
+    transaksi1.cetak_nota()
+    
+    stok_cab1.tampil_stok()
+
+
+    produk1.stok = -2
+    produk1.stok = 10
+    produk1.harga = -50000
+    produk1.harga = 545000
+    print(f'Stok {produk1.nama_produk}: {produk1.stok}')
+    print(f'Harga {produk1.nama_produk}: Rp{produk1.harga:,.0f}')
+
+    stok_cab1.pin_akses = 'ABC' 
+    stok_cab1.pin_akses = 777
+
+    transaksi1.total_bayar = -500 
+    transaksi1.total_bayar = 3000000 
+    print(f'Total bayar TR-001: Rp{transaksi1.total_bayar:,.0f}')
