@@ -1,7 +1,6 @@
 class ProdukOptik:
     nama_optik = 'Optik Cahaya'
     produk_terdaftar = 0
-    kategori_produk = ['FRM', 'LNS', 'AKS']
 
     def __init__(self, id_sku, nama_produk, kategori, harga, stok):
         self.id_sku = id_sku
@@ -55,9 +54,7 @@ class ProdukOptik:
 
 
 class Inventory:
-    nama_sistem = 'Optik Inventory System'
     max_gudang = 1000
-    lokasi_gudang = 'Gudang Pusat Samarinda'
 
     def __init__(self, nama_cabang):
         self.nama_cabang = nama_cabang
@@ -98,7 +95,6 @@ class Inventory:
 
 
 class Transaksi:
-    nama_optik = 'Optik Cahaya'
     transaksi_selesai = 0
     bonus = ['Kotak Kacamata Hardcase Optik Cahaya', 'Lap Kain Microfiber Premium']
 
@@ -133,7 +129,7 @@ class Transaksi:
 
     def cetak_nota(self):
         print('\n' + '=' * 75)
-        print(f'                    NOTA PEMBELIAN - {Transaksi.nama_optik.upper()}')
+        print(f'                    NOTA PEMBELIAN - {ProdukOptik.nama_optik.upper()}')
         print('=' * 75)
         print(f'ID Transaksi : {self.id_transaksi}')
         print(f'Pelanggan    : {self.nama_pelanggan}')
