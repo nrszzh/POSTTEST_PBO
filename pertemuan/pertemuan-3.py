@@ -78,7 +78,7 @@ shop = Shop("Belanja Item")
 bod = Hero("BOD", 3100, bonus_attack=160)
 winter = Item("Winter", 2140, bonus_attack=15, bonus_armor=45)
 
-brodi.cast_skill(1, skills)
+# brodi.cast_skill(1, skills)
 estes.cast_skill()
 
 brodi.beli_item(shop, bod)
