@@ -6,41 +6,41 @@ class ProdukOptik:
         self.id_sku = id_sku
         self.nama_produk = nama_produk
         self.kategori = kategori
-        self.__harga = harga
-        self.__stok = stok
+        self._harga = harga
+        self._stok = stok
         ProdukOptik.produk_terdaftar += 1
 
     @property
     def harga(self):
-        return self.__harga
+        return self._harga
 
     @property
     def stok(self):
-        return self.__stok
+        return self._stok
 
     @harga.setter
     def harga(self, harga_baru):
         if harga_baru <= 0:
             print('Harga harus lebih besar dari Rp 0')
         else:
-            self.__harga = harga_baru
+            self._harga = harga_baru
 
     @stok.setter
     def stok(self, stok_baru):
         if stok_baru < 0:
             print(f'Stok {self.nama_produk} tidak boleh negatif')
         else: 
-            self.__stok = stok_baru
+            self._stok = stok_baru
 
     def tampil_detail(self):
         print(f'| [{self.id_sku:<15}] {self.nama_produk:<35} | Kat: {self.kategori:<5} | Harga: Rp{self.harga:<10,.0f} | Stok: {self.stok:<3} |')
 
     def kurangi_stok(self, jumlah):
-        if jumlah <= self.__stok:
-            self.__stok -= jumlah
+        if jumlah <= self._stok:
+            self._stok -= jumlah
             return True
         else:
-            print(f'Stok {self.nama_produk} tidak cukup, (Sisa : {self.__stok})')
+            print(f'Stok {self.nama_produk} tidak cukup, (Sisa : {self._stok})')
             return False
 
     @classmethod
@@ -53,13 +53,24 @@ class ProdukOptik:
         return nom_harga * qty_stok
 
 class Frame(ProdukOptik):
-    pass
+    def __init__(self, id_sku, nama_produk, harga, stok, material, tipe_rim):
+        super().__init__(id_sku, nama_produk, 'FRM', harga, stok)
+        self.material = material
+        self.tipe_rim = tipe_rim 
+
+    
 
 class Lensa(ProdukOptik):
-    pass
+    def __init__(self, id_sku, nama_produk, harga, stok, ukuran_lensa, jenis_lensa):
+        super().__init__(id_sku, nama_produk, 'LNS', harga, stok)
+        self.ukuran = ukuran_lensa
+        self.jenis = jenis_lensa
 
 class Aksesoris(ProdukOptik):
-    pass
+    def __init__(self, id_sku, nama_produk, harga, stok, jenis_aks, ukuran):
+        super().__init__(id_sku, nama_produk, 'AKS', harga, stok)
+        self.jenis_aks = jenis_aks
+        self.ukuran = ukuran
 
 
 class Inventory:
