@@ -36,7 +36,7 @@ class ProdukOptik(ABC):
             self._stok = stok_baru
 
     def tampil_detail(self):
-        print(f' [{self.id_sku:<15}] | {self.nama_produk:<35} | {self.kategori:<8} | Rp{self.harga:<10,.0f} | {self.stok:<3} ', end= "")
+        print(f' [{self.id_sku:<15}] | {self.nama_produk:<35} | {self.kategori:<8} | Rp{self.hitung_harga_akhir():<10,.0f} | {self.stok:<4} | {self.spesifikasi():25} |')
 
     def kurangi_stok(self, jumlah):
         if jumlah <= self._stok:
@@ -67,11 +67,6 @@ class Frame(ProdukOptik):
         self.material = material
         self.tipe_rim = tipe_rim 
 
-    def tampil_detail(self):
-        super().tampil_detail() 
-        spec = f'{self.material} ({self.tipe_rim})'
-        print(f' | {spec:<25} |')
-
     def hitung_harga_akhir(self):
         return self._harga
 
@@ -94,11 +89,6 @@ class Lensa(ProdukOptik):
         self.ukuran_lensa = ukuran_lensa
         self.jenis_lensa = jenis_lensa
 
-    def tampil_detail(self):
-        super().tampil_detail() 
-        spec = f'{self.ukuran_lensa} ({self.jenis_lensa})'
-        print(f' | {spec:<25} |')
-
     def hitung_harga_akhir(self):
         ganti = self.ganti_jenis.get(self.jenis_lensa, 0)
         return self._harga + ganti
@@ -111,11 +101,6 @@ class Aksesoris(ProdukOptik):
         super().__init__(id_sku, nama_produk, 'AKS', harga, stok)
         self.jenis_aks = jenis_aks
         self.ukuran = ukuran
-
-    def tampil_detail(self):
-        super().tampil_detail() 
-        spec = f'{self.jenis_aks} ({self.ukuran})'
-        print(f' | {spec:<25} |')
 
     def hitung_harga_akhir(self):
         return self._harga
