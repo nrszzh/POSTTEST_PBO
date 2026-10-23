@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 class ProdukOptik(ABC):
     nama_optik = 'Optik Cahaya'
     produk_terdaftar = 0
+    dapat_bonus = False
 
     def __init__(self, id_sku, nama_produk, kategori, harga, stok):
         self.id_sku = id_sku
@@ -59,6 +60,8 @@ class ProdukOptik(ABC):
 
 
 class Frame(ProdukOptik):
+    dapat_bonus = True
+
     def __init__(self, id_sku, nama_produk, harga, stok, material, tipe_rim):
         super().__init__(id_sku, nama_produk, 'FRM', harga, stok)
         self.material = material
@@ -69,8 +72,23 @@ class Frame(ProdukOptik):
         spec = f'{self.material} ({self.tipe_rim})'
         print(f' | {spec:<25} |')
 
+    def hitung_harga_akhir(self):
+        return self._harga
+
+    def spesifikasi(self):
+        return f'{self.material} ({self.tipe_rim})'
+
 
 class Lensa(ProdukOptik):
+    dapat_bonus = True
+    ganti_jenis = {
+        'Anti UV' :    0,
+        'Anti-Glare':  50_000,
+        'Blueray':     150_000,
+        'Photocromic': 300_000,
+        'Progressive': 500_000,
+    }
+
     def __init__(self, id_sku, nama_produk, harga, stok, ukuran_lensa, jenis_lensa):
         super().__init__(id_sku, nama_produk, 'LNS', harga, stok)
         self.ukuran_lensa = ukuran_lensa
@@ -80,6 +98,13 @@ class Lensa(ProdukOptik):
         super().tampil_detail() 
         spec = f'{self.ukuran_lensa} ({self.jenis_lensa})'
         print(f' | {spec:<25} |')
+
+    def hitung_harga_akhir(self):
+        ganti = self.ganti_jenis.get(self.jenis_lensa, 0)
+        return self._harga + ganti
+
+    def spesifikasi(self):
+        return f'{self.ukuran_lensa} ({self.jenis_lensa})'
 
 class Aksesoris(ProdukOptik):
     def __init__(self, id_sku, nama_produk, harga, stok, jenis_aks, ukuran):
@@ -92,6 +117,11 @@ class Aksesoris(ProdukOptik):
         spec = f'{self.jenis_aks} ({self.ukuran})'
         print(f' | {spec:<25} |')
 
+    def hitung_harga_akhir(self):
+        return self._harga
+
+    def spesifikasi(self):
+        return f'{self.jenis_aks} ({self.ukuran})'
 
 class Inventory:
     max_gudang = 1000
