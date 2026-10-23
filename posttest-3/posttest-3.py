@@ -265,3 +265,10 @@ if __name__ == '__main__':
     transaksi1.total_bayar = -500 
     transaksi1.total_bayar = 3000000 
     print(f'Total bayar TR-001: Rp{transaksi1.total_bayar:,.0f}')
+
+    print('\nTry Except Instansiasi Objek Abstract Class:')
+    try:
+        p_abc = ProdukOptik('TST-018', 'Produk Absctract', 'OPT', 100000, 2)
+        print(f' {p_abc}')
+    except TypeError as e:
+        print(f'{e}')
