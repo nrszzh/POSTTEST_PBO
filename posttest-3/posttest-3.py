@@ -58,6 +58,19 @@ class ProdukOptik(ABC):
     def spesifikasi(self):
         pass
 
+    def __add__(self, other):
+        if hasattr(other, 'hitung_harga_akhir'):
+            return self.hitung_harga_akhir() + other.hitung_harga_akhir()
+        if isinstance(other, (int, float)):
+            return self.hitung_harga_akhir() + other
+        return NotImplemented
+
+    def __radd__(self, other):
+        if isinstance(other, (int, float)):
+            return other + self.hitung_harga_akhir()
+        return NotImplemented
+
+
 
 class Frame(ProdukOptik):
     dapat_bonus = True
@@ -336,3 +349,14 @@ if __name__ == '__main__':
     layanan_optik([periksa_lengkap, pasang], transaksi1)
 
     transaksi1.cetak_nota()
+
+
+    print('\nCEK TOTAL HARGA')
+    cek1 = produk1 + produk6
+    print(f'Total Harga 2 produk : Rp{cek1:,.0f}')
+    cek2 = produk1 + produk7 + produk11
+    print(f'Total Harga 3 produk : Rp{cek2:,.0f}')
+    cek3 = produk1 + produk6 + produk11 + produk12
+    print(f'Total Harga 4 produk : Rp{cek3:,.0f}')
+    cek4 = sum([produk1, produk6, produk11, produk12])
+    print(f'Harga Paket 4 produk : Rp{cek4:,.0f}')
