@@ -36,7 +36,7 @@ class ProdukOptik(ABC):
             self._stok = stok_baru
 
     def tampil_detail(self):
-        print(f' [{self.id_sku:<15}] | {self.nama_produk:<35} | {self.kategori:<8} | Rp{self.hitung_harga_akhir():<10,.0f} | {self.stok:<4} | {self.spesifikasi():25} |')
+        print(f' [{self.id_sku:<15}] | {self.nama_produk:<35} | {self.kategori:<8} | Rp{self.hitung_harga_akhir():<10,.0f} | {self.stok:<4} | {self.spesifikasi():<25} |')
 
     def kurangi_stok(self, jumlah):
         if jumlah <= self._stok:
@@ -157,6 +157,7 @@ class Transaksi:
         self.id_transaksi = id_transaksi
         self.nama_pelanggan = nama_pelanggan
         self.item_pembelian = []
+        self.item_layanan = []
         self.status_pembayaran = 'Pending'
         self.__total_bayar = 0
 
@@ -182,30 +183,80 @@ class Transaksi:
             self.__total_bayar += subtotal
             print(f'Ditambahkan ke {self.id_transaksi}: {produk.nama_produk} (x{qty})')
 
+    def tambah_layanan(self, data_layanan):
+        self.item_layanan.append(data_layanan)
+        self.__total_bayar += data_layanan['biaya']
+        print(f"{data_layanan['kategori_layanan']} ({data_layanan['keterangan']}) biaya Rp{data_layanan['biaya']:,.0f}")
+
     def cetak_nota(self):
-        print('\n' + '=' * 75)
+        print('\n' + '=' * 95)
         print(f'                    NOTA PEMBELIAN - {ProdukOptik.nama_optik.upper()}')
-        print('=' * 75)
+        print('=' * 95)
         print(f'ID Transaksi : {self.id_transaksi}')
         print(f'Pelanggan    : {self.nama_pelanggan}')
-        print('-' * 75)
-        print(f"{'SKU CODE':<15} | {'ITEM':<35} | {'QTY':<3} | {'SUBTOTAL':<12}")
-        print('-' * 75)
-        kacamata = False
-        for item in self.item_pembelian:
-            prod = item['produk']
-            print(f"{prod.id_sku:<15} | {prod.nama_produk:<35} | {item['qty']:<3} | Rp{item['subtotal']:<10,.0f}")
-            if prod.kategori in ['FRM', 'LNS']:
-                kacamata = True
-        print('-' * 75)
-        print(f'TOTAL BELANJA : Rp{self.total_bayar:,.0f}')
-        if kacamata:
-            print('[FREE BONUS]:')
+        print('-' * 95)
+        ada_bonus = False
+
+        if self.item_pembelian:
+            print('\n[PEMBELIAN PRODUK]')
+            print(f"{'SKU CODE':<18}   {'ITEM PRODUK':<30}   {'HARGA':<15}   {'QTY':<5}   {'SUBTOTAL':<15}")
+            print('-' * 95)
+            for item in self.item_pembelian:
+                prod = item['produk']
+                harga_akhir = prod.hitung_harga_akhir()
+                subtotal = harga_akhir * item['qty']
+                print(f"{prod.id_sku:<18}   {prod.nama_produk:<30}   Rp {harga_akhir:<12,.0f}   {item['qty']:<5}   Rp {subtotal:<12,.0f}")
+                if prod.dapat_bonus:
+                    ada_bonus = True
+
+        if self.item_layanan:
+            if self.item_pembelian:
+                print('-' * 95)
+            print('\n[LAYANAN OPTIK]')
+            print(f"{'KATEGORI LAYANAN':<18}   {'KETERANGAN':<56}   {'BIAYA':<10}")
+            print('-' * 95)
+            for item in self.item_layanan:
+                print(f"{item['kategori_layanan']:<18}   {item['keterangan']:<56}   Rp {item['biaya']:<10,.0f}")
+
+
+        print('-' * 95)
+        if ada_bonus:
+            print('\n[FREE BONUS]:')
             for bonus in Transaksi.bonus:
                 print(f'  + 1x {bonus}')
-        print('=' * 75 + '\n')
+        print('-' * 95)
+        print(f"{'':<60} TOTAL PEMBAYARAN : Rp {self.total_bayar:<12,.0f}")
+        print('=' * 95 + '\n')
         Transaksi.transaksi_selesai += 1
 
+class LayananPemeriksaanMata:
+    def __init__(self, jenis_pemeriksaan, biaya):
+        self.jenis_pemeriksaan = jenis_pemeriksaan
+        self.biaya = biaya
+
+    def dilayani(self):
+        return {
+            'kategori_layanan': 'Pemeriksaan Mata',
+            'keterangan': self.jenis_pemeriksaan,
+            'biaya': self.biaya
+        }
+
+class LayananPasangLensa:
+    def __init__(self, keterangan, biaya):
+        self.keterangan = keterangan
+        self.biaya = biaya
+
+    def dilayani(self):
+        return {
+            'kategori_layanan': 'Pemasangan Lensa',
+            'keterangan': self.keterangan,
+            'biaya': self.biaya
+        }
+
+def layanan_optik(daftar_layanan, objek_transaksi):
+    for layanan in daftar_layanan:
+        data_hasil = layanan.dilayani()
+        objek_transaksi.tambah_layanan(data_hasil)
 
 if __name__ == '__main__':
     produk1 = Frame('FRM-RB-BLK-52', 'Ray-Ban Wayfarer Classic', 2200000, 5, 'Titanium', 'Full Rim')
@@ -246,11 +297,11 @@ if __name__ == '__main__':
 
     Inventory.update_kapasitas_gdg(1500)
 
-    print()
-    transaksi1.tambah_item_pembelian(produk1, qty=1)
-    transaksi1.tambah_item_pembelian(produk2, qty=1)
-    transaksi1.tambah_item_pembelian(produk3, qty=2)
-    transaksi1.cetak_nota()
+    # print()
+    # transaksi1.tambah_item_pembelian(produk1, qty=1)
+    # transaksi1.tambah_item_pembelian(produk2, qty=1)
+    # transaksi1.tambah_item_pembelian(produk3, qty=2)
+    # transaksi1.cetak_nota()
 
     produk1.stok = -2
     produk1.stok = 10
@@ -272,3 +323,16 @@ if __name__ == '__main__':
         print(f' {p_abc}')
     except TypeError as e:
         print(f'{e}')
+
+    print()
+    transaksi1 = Transaksi('TR-0001', 'Nur Azizah')
+    transaksi2 = Transaksi('TR-0002', 'Islamiyah')
+    transaksi1.tambah_item_pembelian(produk1, qty=1)
+    transaksi1.tambah_item_pembelian(produk6, qty=1)
+
+    periksa_standar = LayananPemeriksaanMata('Cek Miopia & Silinder (Standar)', 0)    
+    periksa_lengkap = LayananPemeriksaanMata('Skrining Lengkap & Konsultasi Dokter', 150000) 
+    pasang  = LayananPasangLensa('Pasang Lensa (Lensa Sendiri)', 50000)
+    layanan_optik([periksa_lengkap, pasang], transaksi1)
+
+    transaksi1.cetak_nota()
