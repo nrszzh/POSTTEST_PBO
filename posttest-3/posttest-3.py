@@ -1,16 +1,18 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 class ProdukOptik(ABC):
     nama_optik = 'Optik Cahaya'
     produk_terdaftar = 0
     dapat_bonus = False
 
-    def __init__(self, id_sku, nama_produk, kategori, harga, stok):
+    def __init__(self, id_sku, nama_produk, kategori, harga, stok, diskon=0.0):
         self.id_sku = id_sku
         self.nama_produk = nama_produk
         self.kategori = kategori
         self._harga = harga
         self._stok = stok
+        self.diskon = diskon
         ProdukOptik.produk_terdaftar += 1
 
     @property
@@ -75,13 +77,14 @@ class ProdukOptik(ABC):
 class Frame(ProdukOptik):
     dapat_bonus = True
 
-    def __init__(self, id_sku, nama_produk, harga, stok, material, tipe_rim):
-        super().__init__(id_sku, nama_produk, 'FRM', harga, stok)
+    def __init__(self, id_sku, nama_produk, harga, stok, material, tipe_rim, diskon=0.0):
+        super().__init__(id_sku, nama_produk, 'FRM', harga, stok, diskon)
         self.material = material
         self.tipe_rim = tipe_rim 
 
     def hitung_harga_akhir(self):
-        return self._harga
+        harga_setelah_diskon = self._harga * (1 - self.diskon)
+        return harga_setelah_diskon
 
     def spesifikasi(self):
         return f'{self.material} ({self.tipe_rim})'
@@ -97,26 +100,27 @@ class Lensa(ProdukOptik):
         'Progressive': 500_000,
     }
 
-    def __init__(self, id_sku, nama_produk, harga, stok, ukuran_lensa, jenis_lensa):
-        super().__init__(id_sku, nama_produk, 'LNS', harga, stok)
+    def __init__(self, id_sku, nama_produk, harga, stok, ukuran_lensa, jenis_lensa, diskon=0.0):
+        super().__init__(id_sku, nama_produk, 'LNS', harga, stok, diskon)
         self.ukuran_lensa = ukuran_lensa
         self.jenis_lensa = jenis_lensa
 
     def hitung_harga_akhir(self):
         ganti = self.ganti_jenis.get(self.jenis_lensa, 0)
-        return self._harga + ganti
+        harga_dasar_lensa = self._harga + ganti
+        return harga_dasar_lensa * (1 - self.diskon)
 
     def spesifikasi(self):
         return f'{self.ukuran_lensa} ({self.jenis_lensa})'
 
 class Aksesoris(ProdukOptik):
-    def __init__(self, id_sku, nama_produk, harga, stok, jenis_aks, ukuran):
-        super().__init__(id_sku, nama_produk, 'AKS', harga, stok)
+    def __init__(self, id_sku, nama_produk, harga, stok, jenis_aks, ukuran, diskon=0.0):
+        super().__init__(id_sku, nama_produk, 'AKS', harga, stok, diskon)
         self.jenis_aks = jenis_aks
         self.ukuran = ukuran
 
     def hitung_harga_akhir(self):
-        return self._harga
+        return self._harga * (1 - self.diskon)
 
     def spesifikasi(self):
         return f'{self.jenis_aks} ({self.ukuran})'
@@ -179,6 +183,7 @@ class Transaksi:
         self.item_layanan = []
         self.status_pembayaran = 'Pending'
         self.__total_bayar = 0
+        self.total_potongan = 0
 
     @property
     def total_bayar(self):
@@ -195,21 +200,32 @@ class Transaksi:
         if produk.kurangi_stok(qty):
             item_detail = DetailTransaksi(produk, qty)
             self.item_pembelian.append(item_detail)
+            harga_kotor = (produk._harga if not isinstance(produk, Lensa) else (produk._harga + produk.ganti_jenis.get(produk.jenis_lensa, 0))) * qty
+            potongan_item = harga_kotor - item_detail.subtotal
+            self.total_potongan += potongan_item
             self.__total_bayar += item_detail.subtotal
-            print(f'Ditambahkan ke {self.id_transaksi}: {produk.nama_produk} (x{qty})')
 
     def tambah_layanan(self, data_layanan):
         self.item_layanan.append(data_layanan)
         self.__total_bayar += data_layanan['biaya']
         print(f"{data_layanan['kategori_layanan']} ({data_layanan['keterangan']}) biaya Rp{data_layanan['biaya']:,.0f}")
 
-    def cetak_nota(self):
+    def cetak_nota(self, nama_cabang):
+        waktu_sekarang = datetime.now()
+        waktu_transaksi = waktu_sekarang.strftime('%Y-%m-%d %H:%M:%S WITA')
+        jam = waktu_sekarang.hour
+
+        if 8 <= jam < 15:
+            nama_kasir = "Meidiana"
+        else:
+            nama_kasir = "Dewi"
+
         print('\n' + '=' * 95)
-        print(f'NOTA PEMBELIAN - {ProdukOptik.nama_optik.upper()}'.center(95))
+        print(f'NOTA PEMBELIAN - {nama_cabang.upper()}'.center(95))
         print('=' * 95)
-        print(f'ID Transaksi : {self.id_transaksi}')
-        print(f'Pelanggan    : {self.nama_pelanggan}')
-        print('-' * 95)
+        print(f'ID Transaksi     : {self.id_transaksi}')
+        print(f'Pelanggan        : {self.nama_pelanggan}')
+        print('=' * 95)
         ada_bonus = False
 
         if self.item_pembelian:
@@ -218,9 +234,13 @@ class Transaksi:
             print('-' * 95)
             for item in self.item_pembelian:
                 prod = item.produk
-                harga_akhir = prod.hitung_harga_akhir()
-                subtotal = item.subtotal
-                print(f"{prod.id_sku:<18}   {prod.nama_produk:<30}   Rp {harga_akhir:<12,.0f}   {item.qty:<5}   Rp {subtotal:<12,.0f}")
+                if isinstance(prod, Lensa):
+                    surcharge = prod.ganti_jenis.get(prod.jenis_lensa, 0)
+                    harga_tampil = prod._harga + surcharge
+                else:
+                    harga_tampil = prod._harga
+                subtotal_tampil = harga_tampil * item.qty
+                print(f"{prod.id_sku:<18}   {prod.nama_produk:<30}   Rp {harga_tampil:<12,.0f}   {item.qty:<5}   Rp {subtotal_tampil:<12,.0f}")
                 if prod.dapat_bonus:
                     ada_bonus = True
 
@@ -233,15 +253,19 @@ class Transaksi:
             for item in self.item_layanan:
                 print(f"{item['kategori_layanan']:<18}   {item['keterangan']:<56}   Rp {item['biaya']:<10,.0f}")
 
-
         print('-' * 95)
         if ada_bonus:
             print('\n[FREE BONUS]:')
-            for bonus in Transaksi.bonus:
-                print(f'  + 1x {bonus}')
+            for b in Transaksi.bonus:
+                print(f'  + 1x {b}')
+
         print('-' * 95)
+        print(f"{'':<60} POTONGAN HARGA   : Rp {self.total_potongan:<12,.0f}")
         print(f"{'':<60} TOTAL PEMBAYARAN : Rp {self.total_bayar:<12,.0f}")
-        print('=' * 95 + '\n')
+        
+        print('=' * 95)
+        print(f'Kasir : {nama_kasir}     -     Waktu : {waktu_transaksi}'.center(95))
+        print('=' * 95)
         Transaksi.transaksi_selesai += 1
 
 class LayananPemeriksaanMata:
@@ -274,22 +298,27 @@ def layanan_optik(daftar_layanan, objek_transaksi):
         objek_transaksi.tambah_layanan(data_hasil)
 
 if __name__ == '__main__':
-    produk1 = Frame('FRM-RB-BLK-52', 'Ray-Ban Wayfarer Classic', 2200000, 5, 'Titanium', 'Full Rim')
-    produk2 = Frame('FRM-OAK-GRY-55', 'Oakley Crosslink Pitch', 1850000, 8, 'Asetat', 'Half Rim')
-    produk3 = Frame('FRM-GU-GLD-50', 'Gucci Round Vintage Gold', 3100000, 3, 'Monel Metal', 'Full Rim')
-    produk4 = Frame('FRM-VO-SLV-51', 'Vogue Metal Cat-Eye', 1400000, 6, 'Stainless Steel', 'Rimless')
-    produk5 = Frame('FRM-PE-BRN-53', 'Persol Cellor Matte Brown', 2750000, 4, 'Asetat Wood', 'Full Rim')
-    produk6 = Lensa('LNS-ES-BLR-0200', 'Essilor Crizal BlueRock', 1200000, 10, '-2,00', 'Blueray')
-    produk7 = Lensa('LNS-HO-TRN-0150', 'Hoya Sensity Transitions', 1650000, 12, '-1,50', 'Photocromic')
-    produk8 = Lensa('LNS-ZE-DRV-0300', 'Zeiss DriveSafe Precision', 2800000, 4, '-3,00', 'Anti-Glare')
-    produk9 = Lensa('LNS-RO-PLS-0100', 'Rodenstock Cosmolit Plus', 950000, 7, '+1,00', 'Progressive')
-    produk10 = Lensa('LNS-NIK-SGL-000', 'Nikon Single Vision Clear', 650000, 15, '0,00', 'Anti-UV')
-    produk11 = Aksesoris('AKS-OPC-LIQ-60', 'OptiClean Spray Solution', 35000, 25, 'Pembersih', '60ml')
-    produk12 = Aksesoris('AKS-MIC-PRF-01', 'Microfiber Premium Cloth', 15000, 50, 'Lap Kacamata', '15x15 cm')
-    produk13 = Aksesoris('AKS-HCS-LEA-02', 'Hardcase Leather Protection', 75000, 15, 'Kotak', 'Standard')
-    produk14 = Aksesoris('AKS-STR-SIL-03', 'Silicone Sports Strap', 25000, 30, 'Tali Gantung', '60 cm')
-    produk15 = Aksesoris('AKS-NSP-CLR-05', 'Nosepad Air Cushion Set', 20000, 40, 'Sparepart', '10 Pairs')
+    produk1  = Frame('FRM-RB-BLK-52',   'Ray-Ban Wayfarer Classic',    2200000, 5,  'Titanium', 'Full Rim', diskon=0.1)  
+    produk2  = Frame('FRM-OAK-GRY-55',  'Oakley Crosslink Pitch',      1850000, 8,  'Asetat', 'Half Rim')                 
+    produk3  = Frame('FRM-GU-GLD-50',   'Gucci Round Vintage Gold',    3100000, 3,  'Monel Metal', 'Full Rim', diskon=0.15) 
+    produk4  = Frame('FRM-VO-SLV-51',   'Vogue Metal Cat-Eye',         1400000, 6,  'Stainless Steel', 'Rimless')         
+    produk5  = Frame('FRM-PE-BRN-53',   'Persol Cellor Matte Brown',   2750000, 4,  'Asetat Wood', 'Full Rim')            
+    
+    produk6  = Lensa('LNS-ES-BLR-0200', 'Essilor Crizal BlueRock',     1200000, 10, '-2,00', 'Blueray', diskon=0.05)  
+    produk7  = Lensa('LNS-HO-TRN-0150', 'Hoya Sensity Transitions',    1650000, 12, '-1,50', 'Photocromic')                
+    produk8  = Lensa('LNS-ZE-DRV-0300', 'Zeiss DriveSafe Precision',   2800000, 4,  '-3,00', 'Anti-Glare', diskon=0.2)   
+    produk9  = Lensa('LNS-RO-PLS-0100', 'Rodenstock Cosmolit Plus',    950000,  7,  '+1,00', 'Progressive')               
+    produk10 = Lensa('LNS-NIK-SGL-000', 'Nikon Single Vision Clear',   650000,  15, '0,00', 'Anti-UV')                    
+    
+    produk11 = Aksesoris('AKS-OPC-LIQ-60', 'OptiClean Spray Solution', 35000, 25, 'Pembersih', '60ml')                 
+    produk12 = Aksesoris('AKS-MIC-PRF-01', 'Microfiber Premium Cloth', 15000, 50, 'Lap Kacamata', '15x15 cm')           
+    produk13 = Aksesoris('AKS-HCS-LEA-02', 'Hardcase Leather Protection', 75000, 15, 'Kotak', 'Standard', diskon=0.1)
+    produk14 = Aksesoris('AKS-STR-SIL-03', 'Silicone Sports Strap',    25000, 30, 'Tali Gantung', '60 cm')               
+    produk15 = Aksesoris('AKS-NSP-CLR-05', 'Nosepad Air Cushion Set',  20000, 40, 'Sparepart', '10 Pairs')               
 
+    daftar_produk = [produk1, produk2, produk3, produk4, produk5,
+                    produk6, produk7, produk8, produk9, produk10,
+                    produk11, produk12, produk13, produk14, produk15]
 
     stok_cab1 = Inventory('Optik Cahaya Samarinda Central Plaza')
     stok_cab2 = Inventory('Optik Cahaya Bontang City Mall')
@@ -297,12 +326,6 @@ if __name__ == '__main__':
     transaksi1 = Transaksi('TR-0001', 'Nur Azizah')
     transaksi2 = Transaksi('TR-0002', 'Islamiyah')
 
-    daftar_produk = [
-        produk1, produk2, produk3, produk4, produk5,
-        produk6, produk7, produk8, produk9, produk10,
-        produk11, produk12, produk13, produk14, produk15
-    ]
-    
     for p in daftar_produk:
         stok_cab1.tambah_produk(p)
     stok_cab1.tampil_stok()
@@ -350,10 +373,10 @@ if __name__ == '__main__':
     pasang  = LayananPasangLensa('Pasang Lensa (Lensa Sendiri)', 50000)
     layanan_optik([periksa_lengkap, pasang], transaksi1)
 
-    transaksi1.cetak_nota()
+    transaksi1.cetak_nota("Optik Cahaya Samarinda Central Plaza")
 
 
-    print('CEK TOTAL HARGA')
+    print('\nCEK TOTAL HARGA')
     cek1 = produk1 + produk6
     print(f'Total Harga 2 produk : Rp{cek1:,.0f}')
     cek2 = produk1 + produk7 + produk11
