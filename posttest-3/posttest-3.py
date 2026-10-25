@@ -161,6 +161,12 @@ class Inventory:
             cls.max_gudang = kapasitas_baru
             print(f'Kapasitas Gudang Pusat diperbarui menjadi: {cls.max_gudang} unit')
 
+class DetailTransaksi:
+    """Kelas komposisi yang siklus hidupnya terikat di dalam Transaksi."""
+    def __init__(self, produk, qty):
+        self.produk = produk
+        self.qty = qty
+        self.subtotal = produk.hitung_harga_akhir() * qty
 
 class Transaksi:
     transaksi_selesai = 0
@@ -187,13 +193,9 @@ class Transaksi:
 
     def tambah_item_pembelian(self, produk, qty=1):
         if produk.kurangi_stok(qty):
-            subtotal = produk.harga * qty
-            self.item_pembelian.append({
-                'produk': produk,
-                'qty': qty,
-                'subtotal': subtotal
-            })
-            self.__total_bayar += subtotal
+            item_detail = DetailTransaksi(produk, qty)
+            self.item_pembelian.append(item_detail)
+            self.__total_bayar += item_detail.subtotal
             print(f'Ditambahkan ke {self.id_transaksi}: {produk.nama_produk} (x{qty})')
 
     def tambah_layanan(self, data_layanan):
@@ -203,7 +205,7 @@ class Transaksi:
 
     def cetak_nota(self):
         print('\n' + '=' * 95)
-        print(f'                    NOTA PEMBELIAN - {ProdukOptik.nama_optik.upper()}')
+        print(f'NOTA PEMBELIAN - {ProdukOptik.nama_optik.upper()}'.center(95))
         print('=' * 95)
         print(f'ID Transaksi : {self.id_transaksi}')
         print(f'Pelanggan    : {self.nama_pelanggan}')
@@ -215,10 +217,10 @@ class Transaksi:
             print(f"{'SKU CODE':<18}   {'ITEM PRODUK':<30}   {'HARGA':<15}   {'QTY':<5}   {'SUBTOTAL':<15}")
             print('-' * 95)
             for item in self.item_pembelian:
-                prod = item['produk']
+                prod = item.produk
                 harga_akhir = prod.hitung_harga_akhir()
-                subtotal = harga_akhir * item['qty']
-                print(f"{prod.id_sku:<18}   {prod.nama_produk:<30}   Rp {harga_akhir:<12,.0f}   {item['qty']:<5}   Rp {subtotal:<12,.0f}")
+                subtotal = item.subtotal
+                print(f"{prod.id_sku:<18}   {prod.nama_produk:<30}   Rp {harga_akhir:<12,.0f}   {item.qty:<5}   Rp {subtotal:<12,.0f}")
                 if prod.dapat_bonus:
                     ada_bonus = True
 
@@ -351,7 +353,7 @@ if __name__ == '__main__':
     transaksi1.cetak_nota()
 
 
-    print('\nCEK TOTAL HARGA')
+    print('CEK TOTAL HARGA')
     cek1 = produk1 + produk6
     print(f'Total Harga 2 produk : Rp{cek1:,.0f}')
     cek2 = produk1 + produk7 + produk11
